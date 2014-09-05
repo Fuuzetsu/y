@@ -13,7 +13,7 @@ import qualified Y.String as S
 data Buffer = Buffer
     { _text :: S.YiString
     , _cursorPosition :: S.Position
-    } deriving (Eq, Show)
+    } deriving Eq
 
 makeLenses ''Buffer
 
@@ -25,33 +25,26 @@ data BufferUpdate
     | Insert S.YiString
     | Delete S.YiString
     | CursorFromTo S.Position S.Position
-    | Nop
-    deriving (Show, Eq)
 
-cursorUp :: Buffer -> BufferUpdate
-cursorUp (Buffer string cursor)
-    = if y > 0
-      then CursorFromTo cursor (S.positionForCoords (pred y, 0) string)
-      else Nop
+cursorUp :: Buffer -> Buffer
+cursorUp (Buffer string cursor) = Buffer string cursor'
     where
         (y, x) = S.coordsOfPosition cursor string
+        cursor' = S.positionForCoords (pred y, x) string
 
-cursorDown :: Buffer -> BufferUpdate
-cursorDown (Buffer string cursor)
-    = if y < lineCount
-      then CursorFromTo cursor (S.positionForCoords (succ y, 0) string)
-      else Nop
+cursorDown :: Buffer -> Buffer
+cursorDown (Buffer string cursor) = Buffer string cursor'
     where
         (y, x) = S.coordsOfPosition cursor string
-        lineCount = S.countNewLines string
+        cursor' = S.positionForCoords (succ y, x) string
 
-cursorLeft :: Buffer -> BufferUpdate
-cursorLeft b | atSof b = Nop
-cursorLeft (Buffer _ cursor) = CursorFromTo cursor (pred cursor)
+cursorLeft :: Buffer -> Buffer
+cursorLeft b | atSof b = b
+cursorLeft b = b & cursorPosition %~ pred
 
-cursorRight :: Buffer -> BufferUpdate
-cursorRight b | atEof b = Nop
-cursorRight (Buffer _ cursor) = CursorFromTo cursor (succ cursor)
+cursorRight :: Buffer -> Buffer
+cursorRight b | atEof b = b
+cursorRIght b = b & cursorPosition %~ succ
 
 atSof :: Buffer -> Bool
 atSof (Buffer _ 0) = True
