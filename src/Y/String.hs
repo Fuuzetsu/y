@@ -130,6 +130,10 @@ newtype Size = Size
     { fromSize :: Int64
     } deriving (Eq, Show, Ord)
 
+instance NFData Size where
+  rnf (Size s) = rnf s
+
+
 instance Monoid Size where
     mempty = Size 0
     mappend (Size a) (Size b) = Size (a + b)
@@ -256,7 +260,7 @@ lineSplitAtEvery i l
 lineSplitAtEvery i l = pure (lineTake i l) <> lineSplitAtEvery i (lineDrop i l)
 
 drop :: Size -> YiString -> YiString
-drop (Size n) = snd . splitAt n 
+drop (Size n) = snd . splitAt n
 
 coordsOfPosition :: Position -> YiString -> (Int64, Int64)
 coordsOfPosition p s = coordsOfPositionWrappingToWidth p (fromSize (length s)) s
